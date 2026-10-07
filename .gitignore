@@ -1,0 +1,7 @@
+datasets/
+pretrained/
+results/
+*.pth
+*.pkl
+__pycache__/
+runs/

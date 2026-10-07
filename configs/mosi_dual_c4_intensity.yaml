@@ -1,0 +1,81 @@
+base:
+  project_name: ALMT_MOSI_Dual_C4_Intensity_conta
+  ckpt_root: ./ckpt
+  seed: 42
+  lr: 0.0001
+  weight_decay: 0.0001
+  batch_size: 32
+  n_epochs: 200
+  num_workers: 8
+  gpu_id: 0
+  # Select one checkpoint on validation, then evaluate test once.
+  evaluation_protocol: validation_selected
+  # A validation-selected checkpoint is still saved for controlled analysis.
+  selection_metric: Mult_acc_7
+  selection_mode: max
+  selection_secondary_metric: MAE
+  selection_secondary_mode: min
+
+dataset:
+  datasetName: mosi
+  dataPath: ./datasets/mosi/unaligned_50_dual_qwen25_c4.pkl
+  train_mode: regression
+
+model:
+  bert_pretrained: ./pretrained/bert-base-uncased
+
+  # Projection Layer Parameters
+  l_input_dim: 768
+  a_input_dim: 5
+  v_input_dim: 20
+  l_proj_dst_dim: 128
+  a_proj_dst_dim: 128
+  v_proj_dst_dim: 128
+
+  # Transformer Parameters
+  token_len: 8
+  token_dim: 128
+  l_input_length: 50
+  a_input_length: 375
+  v_input_length: 500
+  proj_input_dim: 128
+  proj_depth: 1
+  proj_heads: 8
+  proj_mlp_dim: 128
+
+  # Dual Text Parameters
+  dual_fusion_mode: gated_cross
+  dual_cross_heads: 8
+  dual_cross_dropout: 0.1
+  dual_scale_logit_init: -2.0
+
+  # Fine-grained Intensity Parameters
+  use_intensity_objective: true
+  ordinal_prediction_weight: 0.8
+  contrastive_projection_dim: 64
+  contrastive_projection_dropout: 0.1
+
+  # Text Encoder Parameters
+  token_length: 8
+  l_enc_heads: 8
+  l_enc_mlp_dim: 128
+
+  # H Hyper Layer Parameters
+  AHL_depth: 3
+  ahl_heads: 8
+  ahl_dim_head: 16
+  ahl_droup: 0.
+
+  # Fusion Layer Parameters
+  fusion_heads: 8
+  fusion_mlp_dim: 128
+  fusion_layer_depth: 2
+
+objective:
+  regression_weight: 1.0
+  ordinal_weight: 0.4
+  contrastive_weight: 0.0
+  contrastive_temperature: 0.2
+  contrastive_label_temperature: 0.5
+  auxiliary_warmup_epochs: 10
+  max_balance_weight: 4.5

@@ -1,0 +1,90 @@
+base:
+  project_name: ALMT_MOSEI_Dual_C4_Intensity_rho030_ord015_fixed_e100_wu10_lr2e-5_fixedselect_seed0
+  ckpt_root: ./ckpt
+  seed: 0
+  # Keep LR and fixed-rho selection unchanged; only reduce ordinal loss weight.
+  lr: 0.00002
+  weight_decay: 0.0001
+  batch_size: 32
+  # Preserve the baseline warm-up and cosine schedule for the loss-weight comparison.
+  # Validation Acc-7 selects the checkpoint within this training budget.
+  n_epochs: 100
+  # Ten epochs exactly reproduces a 10% LR warm-up for this 100-epoch run.
+  lr_warmup_epochs: 10
+  num_workers: 8
+  gpu_id: 0
+  # Match the MOSI workflow: select on validation and evaluate test once.
+  evaluation_protocol: validation_selected
+  selection_metric: Mult_acc_7
+  selection_mode: max
+  selection_secondary_metric: MAE
+  selection_secondary_mode: min
+  # Disable per-epoch rho search: select by the configured training rho (0.30).
+  # After checkpoint selection, optional inference-rho search uses validation only.
+  validation_rho_candidates: null
+
+dataset:
+  datasetName: mosei
+  dataPath: ./datasets/mosei/unaligned_50_dual_qwen25_c4.pkl
+  train_mode: regression
+
+model:
+  bert_pretrained: ./pretrained/bert-base-uncased
+
+  # Projection Layer Parameters
+  l_input_dim: 768
+  a_input_dim: 74
+  v_input_dim: 35
+  l_proj_dst_dim: 128
+  a_proj_dst_dim: 128
+  v_proj_dst_dim: 128
+
+  # Transformer Parameters
+  token_len: 8
+  token_dim: 128
+  l_input_length: 50
+  a_input_length: 500
+  v_input_length: 500
+  proj_input_dim: 128
+  proj_depth: 1
+  proj_heads: 8
+  proj_mlp_dim: 128
+
+  # Dual Text Parameters
+  dual_fusion_mode: gated_cross
+  dual_cross_heads: 8
+  dual_cross_dropout: 0.1
+  dual_scale_logit_init: -2.0
+
+  # Fine-grained Intensity Parameters
+  use_intensity_objective: true
+  ordinal_prediction_weight: 0.30
+  contrastive_projection_dim: 64
+  contrastive_projection_dropout: 0.1
+
+  # Text Encoder Parameters
+  token_length: 8
+  l_enc_heads: 8
+  l_enc_mlp_dim: 128
+
+  # H Hyper Layer Parameters
+  AHL_depth: 3
+  ahl_heads: 8
+  ahl_dim_head: 16
+  ahl_droup: 0.
+
+  # Fusion Layer Parameters
+  fusion_heads: 8
+  fusion_mlp_dim: 128
+  fusion_layer_depth: 4
+
+objective:
+  regression_weight: 1.0
+  # Single-variable trial: reduce auxiliary ordinal supervision by 25%.
+  ordinal_weight: 0.3
+  contrastive_weight: 0.0
+  contrastive_temperature: 0.1
+  contrastive_label_temperature: 0.5
+  auxiliary_warmup_epochs: 5
+  # No ordinal_decay_* fields: keep ordinal_weight fixed after warm-up.
+  max_balance_weight: 5.0
